@@ -46,6 +46,7 @@ class Reporter extends Command {
                 $this->diagnosticReport($student, $io);
                 break;
             case PROGRESS:
+                $this->progressReport($student, $io);
                 break;  
             case FEEDBACK:
                 break;
@@ -96,6 +97,35 @@ class Reporter extends Command {
         }
     }
 
+    private function progressReport(array $student, SymfonyStyle $io) {
+        $resps = $this->getCompletedStudentResponses($student["id"]);
+        $io->text(
+            sprintf(
+                "%s %s has completed Numeracy assessment %d times in total. Date and raw score given below:",
+                $student["firstName"], 
+                $student["lastName"], 
+                count($resps),
+            )
+        );
+        
+        $io->text("");
+
+        foreach($resps as $r) {
+            $date = str_replace("/", "-", $r['completed']);
+            $date = new DateTime($date);
+            $dateString = $date->format("dS F Y");
+            
+            $io->text(
+                sprintf(
+                    "Date: %s, Raw Score: %d out of %d",
+                    $dateString,
+                    $r["results"]["rawScore"], 
+                    count($r["responses"])
+                )
+            );
+        }
+    }
+
     // loadDataFiles will load all the files in to memory. 
     // 
     // considerations to take would be how large can these files get? And putting in place some
@@ -128,33 +158,33 @@ class Reporter extends Command {
         return [];
     }
 
-    private function getStudentResponses($studentId): array {
-        $resp = [];
+    private function getCompletedStudentResponses($studentId): array {
+        $resps = [];
         foreach ($this->studentResponses as $r) {
             // TODO: add validation here to see if student exists in the json.
             if ($studentId == $r['student']['id']) {
-                array_push($resp, $r);
+                array_push($resps, $r);
             }
         }
-
-        return $resp;
-    }
-
-    private function getLastCompletedResponse($studentId): array {
-        $resps = $this->getStudentResponses($studentId);
-
+        
         $resps = array_filter($resps, function($v) {
             return array_key_exists("completed", $v);
         });     
-
+        
         // consideration: validate the datetime format instead of replacing the bad char.
         usort($resps, function($a, $b) {
            $aCompleted = str_replace("/", "-", $a["completed"]);
            $bCompleted = str_replace("/", "-", $b["completed"]);
-           return (strtotime($aCompleted) > strtotime($bCompleted)) ? -1 : 1;
+           return (strtotime($aCompleted) < strtotime($bCompleted)) ? -1 : 1;
         });
 
-        return $resps[0];
+        return $resps;
+    }
+
+    private function getLastCompletedResponse($studentId): array {
+        $resps = $this->getCompletedStudentResponses($studentId);
+
+        return end($resps);
     }   
 
     private function getStrandResults($studentId, $response) {
