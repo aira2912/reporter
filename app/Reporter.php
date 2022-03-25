@@ -23,12 +23,20 @@ class Reporter extends Command {
     
         $io = new SymfonyStyle($input, $output);
         
-        $name = $io->ask("Student ID");
+        $studentId = $io->ask("Student ID");
         $reportType = (int) $io->ask("Report to generate (1 for Diagnostic, 2 for Progress, 3 for Feedback)");
 
 
         // load data files.
         $this->loadDataFiles();
+
+        // validate student exsits
+        $student = $this->getStudent($studentId);
+        if (empty($student)) {
+            $io->error("invalid student id");
+            return Command::INVALID;
+        }
+
 
         switch ($reportType) {
             case DIAGNOSTIC:
@@ -53,7 +61,7 @@ class Reporter extends Command {
         $studentsData = file_get_contents("./data/students.json");
         $this->students = json_decode($studentsData, true);
 
-        $assesmentsData = file_get_contents("./data/assesments.json");
+        $assesmentsData = file_get_contents("./data/assessments.json");
         $this->assesmentsData = json_decode($assesmentsData, true);
             
         $studentResponsesData = file_get_contents("./data/student-responses.json");
