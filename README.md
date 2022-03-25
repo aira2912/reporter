@@ -102,13 +102,15 @@ For us to run the application and tests, use one of the following options based 
 
 ## Instructions to run
 
-```shell
-$ docker build -t reporter .
-$ docker run -it --rm --name reporter reporter
+1. First you will need to install the dependencies
+
+```shell 
+docker-compose run composer
 ```
 
-Or if you wish to run this with docker Compose
+2. Then you'll be able to run the application or the unit tests with one of the following.
+
 ```shell
-$ docker-compose run php
-$ docker-compose run phpunit
+docker-compose run php
+docker-compose run phpunit
 ```

@@ -7,6 +7,7 @@ services:
     volumes:
       - .:/app
     restart: never
+    entrypoint: composer install
   php:
     image: php:cli-alpine
     restart: never
