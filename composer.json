@@ -5,7 +5,8 @@
     "autoload": {
         "psr-0": {
              "UnitTestFiles": ""
-         }
+         },
+         "classmap": ["app"]
     },
     "require": {
         "symfony/console": "^6.0"
