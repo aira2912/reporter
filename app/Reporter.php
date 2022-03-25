@@ -4,9 +4,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class Reporter {
     
-    protected $students;
-    protected $studentResponses;
-    protected $questions;
+    protected array $students;
+    protected array $studentResponses;
+    protected array $questions;
+
+    private array $student;
+    private array $completedResponses;
 
     public function __construct(array $students, array $studentResponses, array $questions) {
         $this->students = $students;
@@ -14,10 +17,10 @@ class Reporter {
         $this->questions = $questions;
     } 
 
-    protected function diagnosticReport(array $student, SymfonyStyle $io) {
+    public function diagnosticReport(array $student, SymfonyStyle $io) {
         $resp = $this->getLastCompletedResponse($student["id"]);
         
-        $dateString = $this->formatDate($res["completed"], "dS F Y h:i A");
+        $dateString = $this->formatDate($resp["completed"], "dS F Y h:i A");
 
         $io->text(
             sprintf(
@@ -51,7 +54,7 @@ class Reporter {
         }
     }
 
-    protected function progressReport(array $student, SymfonyStyle $io) {
+    public function progressReport(array $student, SymfonyStyle $io) {
         $resps = $this->getCompletedStudentResponses($student["id"]);
         $io->text(
             sprintf(
@@ -91,7 +94,7 @@ class Reporter {
         );
     }
 
-    protected function feedbackReport(array $student, SymfonyStyle $io) {
+    public function feedbackReport(array $student, SymfonyStyle $io) {
         $r = $this->getLastCompletedResponse($student["id"]);
         
         $dateString = $this->formatDate($r["completed"], "dS F Y h:i A"); 
@@ -125,9 +128,14 @@ class Reporter {
         }
     }
 
-    protected function getStudent($id): array {
-       foreach ($this->students as $s) {
+    public function getStudent($id): array {
+        if (!empty($this->student)) {
+            return $this->student;
+        }
+
+        foreach ($this->students as $s) {
             if ($id == $s['id']) {
+                $this->student = $s;
                 return $s;
             }
         } 
@@ -136,6 +144,10 @@ class Reporter {
     }
 
     private function getCompletedStudentResponses($studentId): array {
+        if (!empty($this->completedResponses)) {
+            return $this->completedResponses;
+        }
+
         $resps = [];
         foreach ($this->studentResponses as $r) {
             // TODO: add validation here to see if student exists in the json.
@@ -154,6 +166,8 @@ class Reporter {
            $bCompleted = str_replace("/", "-", $b["completed"]);
            return (strtotime($aCompleted) < strtotime($bCompleted)) ? -1 : 1;
         });
+
+        $this->completedResponses = $resps;
 
         return $resps;
     }
@@ -225,7 +239,7 @@ class Reporter {
 
     // consideration: validate datetime.
     private function formatDate(string $timestamp, string $format): string {
-        $date = str_replace("/", "-", $r['completed']);
+        $date = str_replace("/", "-", $timestamp);
         $date = new DateTime($date);
 
         return $date->format($format);
