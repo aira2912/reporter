@@ -32,14 +32,14 @@ class Reporter extends Command {
 
         // validate student exsits
         $student = $this->getStudent($studentId);
-        if (empty($student)) {
+        if (empty($student) || is_null($student)) {
             $io->error("invalid student id");
             return Command::INVALID;
         }
 
-
         switch ($reportType) {
             case DIAGNOSTIC:
+                $this->diagnosticReport($student, $io);
                 break;
             case PROGRESS:
                 break;  
@@ -52,6 +52,9 @@ class Reporter extends Command {
         return Command::SUCCESS;
     }
 
+    private function diagnosticReport(array $student, SymfonyStyle $io) {
+       print_r($student); 
+    }
 
     // loadDataFiles will load all the files in to memory. 
     // 
@@ -74,7 +77,7 @@ class Reporter extends Command {
     private function getStudent($id): array {
        foreach ($this->students as $s) {
             if ($id == $s['id']) {
-                return $student;
+                return $s;
             }
         } 
 
