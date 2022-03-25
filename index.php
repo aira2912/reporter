@@ -3,12 +3,12 @@
 
 require __DIR__.'/vendor/autoload.php';
 
-use App\Reporter as Reporter;
+use App\ReportCommand;
 use Symfony\Component\Console\Application;
 
 $application = new Application();
 
-$command = new Reporter();
+$command = new ReportCommand();
 
 $application->add($command);
 $application->setDefaultCommand($command->getName());
