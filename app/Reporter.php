@@ -49,6 +49,7 @@ class Reporter extends Command {
                 $this->progressReport($student, $io);
                 break;  
             case FEEDBACK:
+                $this->feedbackReport($student, $io);
                 break;
             default:
                 $io->error("Invalid report type. Supported types are 1 for Diagnostic, 2 for Progress, 3 for Feedback");
@@ -124,6 +125,55 @@ class Reporter extends Command {
                 )
             );
         }
+        
+        $fr = $this->getFirstCompletedResponse($student["id"]);
+        $er = $this->getLastCompletedResponse($student["id"]);
+
+        $io->text("");
+        $io->text(
+            sprintf(
+                "%s %s got %d more correct in the recent completed assessment than the oldest",
+                $student["firstName"], 
+                $student["lastName"],
+                $r["results"]["rawScore"] - $fr["results"]["rawScore"] 
+            )
+        );
+    }
+
+    private function feedbackReport(array $student, SymfonyStyle $io) {
+        $r = $this->getLastCompletedResponse($student["id"]);
+                
+        $date = str_replace("/", "-", $r['completed']);
+        $date = new DateTime($date);
+        $dateString = $date->format("dS F Y h:i A");
+
+        $io->text(
+            sprintf(
+                "%s %s recently completed Numeracy assessment on %s",
+                $student["firstName"], 
+                $student["lastName"],   
+                $dateString
+            )
+        );
+
+        $io->text(
+            sprintf(
+                "He got %d questions right out of %d. Feedback for wrong answers given below",
+                $r["results"]["rawScore"],
+                count($r["responses"])
+            )
+        );
+
+        $io->text("");
+
+        $feedback = $this->buildFeedbackResults($student["id"], $r);
+        foreach($feedback as $f) {
+            $io->text(sprintf("Question: %s", $f["question"])); 
+            $io->text(sprintf("Your answer: %s with value %s", $f["incorrect_label"], $f["incorrect_answer"]));
+            $io->text(sprintf("Right answer: %s with value %s", $f["correct_label"], $f["correct_answer"]));
+            $io->text(sprintf("Hint: %s", $f["hint"]));
+            $io->text("");
+        }
     }
 
     // loadDataFiles will load all the files in to memory. 
@@ -181,6 +231,12 @@ class Reporter extends Command {
         return $resps;
     }
 
+    private function getFirstCompletedResponse($studentId): array {
+        $resps = $this->getCompletedStudentResponses($studentId);
+
+        return reset($resps);
+    }   
+    
     private function getLastCompletedResponse($studentId): array {
         $resps = $this->getCompletedStudentResponses($studentId);
 
@@ -207,6 +263,38 @@ class Reporter extends Command {
 
         return $strands;    
     }
+
+    private function buildFeedbackResults($studentId, $response) {
+        $questions = [];
+        foreach($response["responses"] as $r) {
+            $el = [];    
+            $q = $this->questions[$r["questionId"]];
+            
+            $correct = $q["config"]["key"] == $r["response"];
+            if ($correct) {
+                continue;
+            }
+
+            foreach($q["config"]["options"] as $o) {
+                if ($o["id"] == $q["config"]["key"]) {
+                    $el["correct_answer"] = $o["value"];
+                    $el["correct_label"] = $o["label"];
+                }
+                
+                if ($o["id"] == $r["response"]) {
+                    $el["incorrect_answer"] = $o["value"];
+                    $el["incorrect_label"] = $o["label"];
+                }
+            }
+
+            $el["hint"] = $q["config"]["hint"];
+            $el["question"] = $q["stem"];
+            
+            array_push($questions, $el);
+        }
+    
+        return $questions;
+    }   
 }
 
 
