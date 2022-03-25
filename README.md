@@ -99,3 +99,10 @@ For us to run the application and tests, use one of the following options based 
 
 ## Continuous Integration
 1. Use GitHub Actions to run tests
+
+## Instructions to run
+
+```shell
+$ docker build -t reporter .
+$ docker run -it --rm --name reporter reporter
+```
