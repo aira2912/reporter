@@ -1,6 +1,9 @@
 <?php
 
+namespace App;
+
 use Symfony\Component\Console\Style\SymfonyStyle;
+use DateTime;
 
 class Reporter {
     
@@ -143,7 +146,7 @@ class Reporter {
         return [];
     }
 
-    private function getCompletedStudentResponses($studentId): array {
+    public function getCompletedStudentResponses($studentId): array {
         if (!empty($this->completedResponses)) {
             return $this->completedResponses;
         }
@@ -172,13 +175,13 @@ class Reporter {
         return $resps;
     }
 
-    private function getFirstCompletedResponse($studentId): array {
+    public function getFirstCompletedResponse($studentId): array {
         $resps = $this->getCompletedStudentResponses($studentId);
 
         return reset($resps);
     }   
     
-    private function getLastCompletedResponse($studentId): array {
+    public function getLastCompletedResponse($studentId): array {
         $resps = $this->getCompletedStudentResponses($studentId);
 
         return end($resps);
