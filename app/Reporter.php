@@ -17,10 +17,7 @@ class Reporter {
     protected function diagnosticReport(array $student, SymfonyStyle $io) {
         $resp = $this->getLastCompletedResponse($student["id"]);
         
-        // consideration: validate datetime.
-        $date = str_replace("/", "-", $resp['completed']);
-        $date = new DateTime($date);
-        $dateString = $date->format("dS F Y h:i A");
+        $dateString = $this->formatDate($res["completed"], "dS F Y h:i A");
 
         $io->text(
             sprintf(
@@ -68,9 +65,7 @@ class Reporter {
         $io->text("");
 
         foreach($resps as $r) {
-            $date = str_replace("/", "-", $r['completed']);
-            $date = new DateTime($date);
-            $dateString = $date->format("dS F Y");
+            $dateString = $this->formatDate($r["completed"], "dS F Y");
             
             $io->text(
                 sprintf(
@@ -98,10 +93,8 @@ class Reporter {
 
     protected function feedbackReport(array $student, SymfonyStyle $io) {
         $r = $this->getLastCompletedResponse($student["id"]);
-                
-        $date = str_replace("/", "-", $r['completed']);
-        $date = new DateTime($date);
-        $dateString = $date->format("dS F Y h:i A");
+        
+        $dateString = $this->formatDate($r["completed"], "dS F Y h:i A"); 
 
         $io->text(
             sprintf(
@@ -229,4 +222,12 @@ class Reporter {
     
         return $questions;
     }   
+
+    // consideration: validate datetime.
+    private function formatDate(string $timestamp, string $format): string {
+        $date = str_replace("/", "-", $r['completed']);
+        $date = new DateTime($date);
+
+        return $date->format($format);
+    }
 }
