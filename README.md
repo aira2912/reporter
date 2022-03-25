@@ -106,3 +106,9 @@ For us to run the application and tests, use one of the following options based 
 $ docker build -t reporter .
 $ docker run -it --rm --name reporter reporter
 ```
+
+Or if you wish to run this with docker Compose
+```shell
+$ docker-compose run php
+$ docker-compose run phpunit
+```
