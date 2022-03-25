@@ -28,7 +28,12 @@ class Reporter extends Command {
                 break;  
             case FEEDBACK:
                 break;
+            default:
+                $io->error("Invalid report type. Supported types are 1 for Diagnostic, 2 for Progress, 3 for Feedback");
+                
         }
+
+        return Command::SUCCESS;
     }
 }
 
