@@ -4,32 +4,37 @@ namespace App;
 
 use Symfony\Component\Console\Style\SymfonyStyle;
 use DateTime;
+use function array_key_exists;
 
 class Reporter {
     
     protected array $students;
     protected array $studentResponses;
     protected array $questions;
+    protected array $assessments;
 
     private array $student;
     private array $completedResponses;
 
-    public function __construct(array $students, array $studentResponses, array $questions) {
+    public function __construct(array $students, array $studentResponses, array $questions, array $assessments) {
         $this->students = $students;
         $this->studentResponses = $studentResponses;
         $this->questions = $questions;
+        $this->assessments = $assessments;
     } 
 
     public function diagnosticReport(array $student, SymfonyStyle $io) {
         $resp = $this->getLastCompletedResponse($student["id"]);
-        
+        $assessment = $this->getAssesment($resp["assessmentId"]);
+
         $dateString = $this->formatDate($resp["completed"], "dS F Y h:i A");
 
         $io->text(
             sprintf(
-                "%s %s recently completed Numeracy assessment on %s", 
+                "%s %s recently completed %s assessment on %s", 
                 $student["firstName"], 
                 $student["lastName"], 
+                $assessment["name"],
                 $dateString, 
             )
         );
@@ -57,56 +62,65 @@ class Reporter {
         }
     }
 
-    public function progressReport(array $student, SymfonyStyle $io) {
+    public function progressReport(array $student, SymfonyStyle $io) {  
         $resps = $this->getCompletedStudentResponses($student["id"]);
-        $io->text(
-            sprintf(
-                "%s %s has completed Numeracy assessment %d times in total. Date and raw score given below:",
-                $student["firstName"], 
-                $student["lastName"], 
-                count($resps),
-            )
-        );
-        
-        $io->text("");
+        $resps = $this->groupResponsesByAssessment($resps);
 
-        foreach($resps as $r) {
-            $dateString = $this->formatDate($r["completed"], "dS F Y");
+        foreach($resps as $assessmentId => $resps) {
+            $assessment = $this->getAssesment($assessmentId);
             
             $io->text(
                 sprintf(
-                    "Date: %s, Raw Score: %d out of %d",
-                    $dateString,
-                    $r["results"]["rawScore"], 
-                    count($r["responses"])
+                    "%s %s has completed %s assessment %d times in total. Date and raw score given below:",
+                    $student["firstName"], 
+                    $student["lastName"], 
+                    $assessment["name"],
+                    count($resps),
+                )
+            );
+            
+            $io->text("");
+
+            foreach($resps as $r) {
+                $dateString = $this->formatDate($r["completed"], "dS F Y");
+                
+                $io->text(
+                    sprintf(
+                        "Date: %s, Raw Score: %d out of %d",
+                        $dateString,
+                        $r["results"]["rawScore"], 
+                        count($r["responses"])
+                    )
+                );
+            }
+            
+            $fr = reset($resps);
+            $er = end($resps); 
+
+            $io->text("");
+            $io->text(
+                sprintf(
+                    "%s %s got %d more correct in the recent completed assessment than the oldest",
+                    $student["firstName"], 
+                    $student["lastName"],
+                    $r["results"]["rawScore"] - $fr["results"]["rawScore"] 
                 )
             );
         }
-        
-        $fr = $this->getFirstCompletedResponse($student["id"]);
-        $er = $this->getLastCompletedResponse($student["id"]);
-
-        $io->text("");
-        $io->text(
-            sprintf(
-                "%s %s got %d more correct in the recent completed assessment than the oldest",
-                $student["firstName"], 
-                $student["lastName"],
-                $r["results"]["rawScore"] - $fr["results"]["rawScore"] 
-            )
-        );
     }
 
     public function feedbackReport(array $student, SymfonyStyle $io) {
         $r = $this->getLastCompletedResponse($student["id"]);
-        
+        $assessment = $this->getAssesment($r["assessmentId"]);
+
         $dateString = $this->formatDate($r["completed"], "dS F Y h:i A"); 
 
         $io->text(
             sprintf(
-                "%s %s recently completed Numeracy assessment on %s",
+                "%s %s recently completed %s assessment on %s",
                 $student["firstName"], 
                 $student["lastName"],   
+                $assessment["name"],
                 $dateString
             )
         );
@@ -208,6 +222,22 @@ class Reporter {
         return $strands;    
     }
 
+    private function groupResponsesByAssessment(array $resps): array {
+        // key = assessmentId
+        // value = ["responses"];
+        $reports = [];
+
+        foreach($resps as $r) {
+            if (!array_key_exists($r["assessmentId"], $reports)) {
+               $reports[$r["assessmentId"]] = [$r];
+            } else {
+                array_push($reports[$r["assessmentId"]], $r);
+            }
+        }
+
+        return $reports; 
+    }
+
     private function buildFeedbackResults($studentId, $response) {
         $questions = [];
         foreach($response["responses"] as $r) {
@@ -246,5 +276,15 @@ class Reporter {
         $date = new DateTime($date);
 
         return $date->format($format);
+    }
+
+    private function getAssesment($id): array {
+        foreach ($this->assessments as $a) {
+            if ($id == $a['id']) {
+                return $a;
+            }
+        } 
+
+        return [];
     }
 }

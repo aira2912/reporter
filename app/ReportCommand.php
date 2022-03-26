@@ -17,6 +17,7 @@ class ReportCommand extends Command {
     protected $students;
     protected $studentResponses;
     protected $questions;
+    protected $assessments;
 
     protected function execute(InputInterface $input, OutputInterface $output): int {
     
@@ -29,7 +30,7 @@ class ReportCommand extends Command {
         // load data files.
         $this->loadDataFiles();
 
-        $reporter = new Reporter($this->students, $this->studentResponses, $this->questions);
+        $reporter = new Reporter($this->students, $this->studentResponses, $this->questions, $this->assessments);
         
         // validate student exsits
         $student = $reporter->getStudent($studentId);
@@ -63,6 +64,9 @@ class ReportCommand extends Command {
         $studentsData = file_get_contents("./data/students.json");
         $this->students = json_decode($studentsData, true);
             
+        $assessments = file_get_contents("./data/assessments.json");
+        $this->assessments = json_decode($assessments, true);
+
         $studentResponsesData = file_get_contents("./data/student-responses.json");
         $this->studentResponses = json_decode($studentResponsesData, true);
 
