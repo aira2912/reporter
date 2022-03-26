@@ -6,20 +6,20 @@ use PHPUnit\Framework\TestCase;
 class ReporterTest extends TestCase {
     public function testGetStudent() {
         $testStudents = [["id" => 1,  "firstName" => "test", "lastName" => "testing"]];
-        $reporter = new Reporter($testStudents, [], []);
+        $reporter = new Reporter($testStudents, [], [], []);
         $student = $reporter->getStudent("1");
         $this->assertEquals("test", $student["firstName"]);
     }
 
     public function testGetNoneExistentStudent() {
         $testStudents = [["id" => 1,  "firstName" => "test", "lastName" => "testing"]];
-        $reporter = new Reporter($testStudents, [], []);
+        $reporter = new Reporter($testStudents, [], [], []);
         $student = $reporter->getStudent("2");
         $this->assertEmpty($student);
     }
 
     public function testGetCompletedStudentResponseswithNoData() {
-        $reporter = new Reporter([], [], []);
+        $reporter = new Reporter([], [], [], []);
         $resps = $reporter->getCompletedStudentResponses("2");
         
         $this->assertEmpty($resps);
@@ -29,6 +29,7 @@ class ReporterTest extends TestCase {
         $reporter = new Reporter(
             [["id" => "student1", "firstName" => "test", "lastName" => "testing"]], 
             [$this->fakeStudentResponse()], 
+            [],
             []
         );
         $resps = $reporter->getCompletedStudentResponses("student1");
@@ -40,6 +41,7 @@ class ReporterTest extends TestCase {
         $reporter = new Reporter(
             [["id" => "student1", "firstName" => "test", "lastName" => "testing"]], 
             [$this->fakeStudentResponse("16/12/2021 10:46:00"), $this->fakeStudentResponse()], 
+            [],
             []
         );
         
@@ -54,6 +56,7 @@ class ReporterTest extends TestCase {
         $reporter = new Reporter(
             [["id" => "student1", "firstName" => "test", "lastName" => "testing"]], 
             [$this->fakeStudentResponse("16/12/2021 10:46:00"), $this->fakeStudentResponse()], 
+            [],
             []
         );
         
